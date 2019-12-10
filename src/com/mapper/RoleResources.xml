@@ -1,0 +1,218 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybaits.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.dao.RoleResouresDao">
+
+    <resultMap id="RolesMap" type="com.po.RolePo">
+
+        <id property="rId" column="R_ID"></id>
+        <result property="rName" column="R_NAME"></result>
+
+    </resultMap>
+
+    <resultMap id="TreeRoleMap" type="com.po.TreeNode">
+
+        <id property="mId" column="M_ID"></id>
+        <result property="mPid" column="M_PID"></result>
+        <result property="text" column="M_NAME"></result>
+        <result property="url" column="M_Url"></result>
+        <result property="state" column="M_State"></result>
+    </resultMap>
+    <resultMap id="TreeRoleChildMap" type="com.po.TreeNode">
+
+        <id property="mId" column="M_ID"></id>
+        <result property="mPid" column="M_PID"></result>
+        <result property="text" column="M_NAME"></result>
+        <result property="url" column="M_Url"></result>
+        <result property="state" column="M_State"></result>
+    </resultMap>
+
+    <!--查询出角色-->
+    <select id="queryRoles" resultMap="RolesMap">
+        select r.R_ID,r.R_NAME
+        from t_roles r
+    </select>
+    <!--查询角色条数-->
+    <select id="queryRolesTotal" resultType="int">
+        select count(1)
+        from t_roles r
+    </select>
+    <!--新增角色-->
+    <insert id="addRoles" parameterType="com.po.RolePo" useGeneratedKeys="true" keyProperty="rId">
+        insert into t_roles(R_Name)
+        values (#{rName})
+    </insert>
+    <!--删除角色-->
+    <delete id="delRoles" parameterType="com.po.RolePo">
+        delete
+        from t_roles
+        where r_id = #{rId}
+    </delete>
+    <!--修改角色-->
+    <update id="editRoles" parameterType="com.po.RolePo">
+        update t_roles
+        set R_Name = #{rName}
+        where R_ID = #{rId}
+    </update>
+    <!--设置角色资源-->
+    <!--查询角色对应的父级菜单-->
+    <select id="queryResourcesByRole" resultMap="TreeRoleMap" parameterType="map">
+        select *
+        from t_menu_item mi
+        where EXISTS(
+                select M_Id from t_role_menu rm where rm.R_Id = #{roleId} and mi.M_Id = rm.M_Id
+            )
+          and mi.M_Pid = 0
+    </select>
+    <!--查询角色对应的子级菜单-->
+    <select id="queryResourcesByRoleChild" resultMap="TreeRoleChildMap" parameterType="map">
+        select *
+        from t_menu_item mi
+        where EXISTS(
+                select M_Id from t_role_menu rm where rm.R_Id = #{roleId} and mi.M_Id = rm.M_Id
+            )
+          and mi.M_Pid != 0
+          and mi.M_Pid = #{mId}
+    </select>
+
+    <!--设置角色查询 角色 对应的所有可以访问的资源-->
+    <resultMap id="ResByRoleMap" type="com.po.RolePo">
+        <id column="M_Id" property="rId"></id>
+    </resultMap>
+    <select id="queryResByRole" resultMap="ResByRoleMap" parameterType="int">
+        select M_Id
+        from t_role_menu
+        where R_ID = #{roleId}
+    </select>
+
+    <!--查询所有资源-->
+   <!-- <select id="queryAllResources" resultMap="TreeRoleChildMap">
+        select *
+        from t_menu_item mi
+        where EXISTS(
+                select M_Id from t_role_menu rm where mi.M_Id = rm.M_Id
+            )
+          and mi.M_Pid = 0
+    </select>-->
+    <select id="queryAllResources" resultMap="TreeRoleChildMap">
+        select *
+        from t_menu_item mi
+        where  mi.M_Pid = 0
+    </select>
+
+    <!--查询所有资源的子菜单-->
+    <select id="queryAllResourcesChild" resultMap="TreeRoleChildMap" parameterType="map">
+
+
+        SELECT
+            *
+        FROM
+            t_menu_item mi
+        where mi.M_Pid != 0
+            and mi.M_Pid = #{mId};
+
+    </select>
+
+    <!--批量选择的角色，删除勾选的资源id-->
+    <delete id="delRolesResources">
+        delete from t_role_menu
+        where R_Id = #{roleId}
+        <!--AND M_Id IN
+      <foreach collection="list" item="item" index="index" open="(" separator="," close=")">
+          #{item}
+      </foreach>-->
+    </delete>
+    <resultMap id="ParentRoleResIdMap" type="com.po.TreeNode">
+        <id property="mPid" column="M_Pid"></id>
+    </resultMap>
+    <!--查找 勾选资源的父类的id，然后插入到角色资源表中-->
+    <select id="selectParentRoleResId" parameterType="java.util.List" resultMap="ParentRoleResIdMap">
+        select M_Pid from t_menu_item
+        where M_Id in
+        <foreach collection="list" item="item" open="(" separator="," close=")">
+            #{item}
+        </foreach>
+    </select>
+    <!--插入勾选资源的父类id 到角色资源表中-->
+    <insert id="insertRolesParentResources">
+        insert into t_role_menu
+        ( R_Id,M_Id)
+        values
+        <foreach collection="list" item="item" index="index" separator=",">
+            (
+            #{roleId},
+            #{item}
+            )
+        </foreach>
+    </insert>
+
+    <!--插入选择的角色 勾选的子类 资源id 到 资源角色表中-->
+    <insert id="insertRolesResources">
+        insert into t_role_menu
+        ( R_Id,M_Id)
+        values
+        <foreach collection="list" item="item" index="index" separator=",">
+            (
+            #{roleId},
+            #{item}
+            )
+        </foreach>
+    </insert>
+
+
+    <!--资源管理 页面查询开始-->
+    <!--查找父级菜单-->
+    <select id="selectParentList" resultMap="TreeRoleMap">
+        select M_ID,M_NAME,M_Url,M_State
+        from t_menu_item mi
+        where mi.M_Pid = 0
+    </select>
+    <!--根据父级的id，查找对应的子级列表-->
+    <select id="selectChildList" parameterType="map" resultMap="TreeRoleChildMap">
+        SELECT
+            M_Id,
+            M_Name,
+            M_Url,
+            M_State
+        FROM
+            t_menu_item mi2
+        WHERE
+                mi2.M_Pid IN (
+                SELECT
+                    mi1.M_Id
+                FROM
+                    t_menu_item mi1
+                WHERE
+                    mi1.M_Pid = 0
+                  AND mi1.M_Id = #{mId}
+            )
+    </select>
+    <!--资源管理页面查询结束-->
+
+
+    <!--<update id="updateRolesResources" parameterType="map">
+        UPDATE t_role_menu SET
+
+    </update>-->
+
+    <update id="updateListOverdueAmountAndOverdueDay" parameterType="java.util.List">
+        UPDATE arc_pool_to_center_new SET
+        update_time = NOW() ,
+        overdue_amount =
+        <foreach collection="items" item="item" index="index" separator="" open="Case id" close="END">
+            WHEN #{item.id} THEN
+            #{item.overdueAmount}
+        </foreach>
+        ,overdue_day =
+        <foreach collection="items" item="item" index="index" separator="" open="Case id" close="END">
+            WHEN #{item.id}
+            THEN #{item.overdueDay}
+        </foreach>
+        WHERE is_delete = 0 AND id IN
+        <foreach collection="items" item="item" index="index" separator=","
+                 open="(" close=")">
+            #{item.id}
+        </foreach>
+    </update>
+
+</mapper>

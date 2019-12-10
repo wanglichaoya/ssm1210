@@ -1,0 +1,30 @@
+[
+  {
+    "id": 1,
+    "name": "C",
+    "size": "",
+    "date": "02/19/2010",
+    "children": [
+      {
+        "id": 2,
+        "name": "Program Files",
+        "size": "120 MB",
+        "date": "03/20/2010"
+      }
+    ]
+  },
+  {
+    "id": 3,
+    "name": "C",
+    "size": "",
+    "date": "02/19/2010",
+    "children": [
+      {
+        "id": 4,
+        "name": "Program Files",
+        "size": "120 MB",
+        "date": "03/20/2010"
+      }
+    ]
+  }
+]

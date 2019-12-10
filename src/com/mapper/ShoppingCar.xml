@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybaits.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.dao.EcommerceDao">
+
+    <select id="queryShoppingCar" parameterType="com.po.Product" resultType="com.po.Product">
+        select id,name,price from t_product
+    </select>
+
+</mapper>

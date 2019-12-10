@@ -1,0 +1,179 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybaits.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.dao.IUserInfoDao">
+
+    <resultMap id="userRoleMap" type="com.po.RolePo">
+        <id column="R_Id" property="rId"></id>
+        <result column="R_Name" property="text"></result>
+    </resultMap>
+
+    <resultMap id="userInfoMap" type="com.po.UserInfo">
+        <id column="id" property="id"></id>
+        <result property="userName" column="username"></result>
+        <result property="password" column="password"></result>
+        <result property="age" column="age"></result>
+        <result property="sex" column="sex"></result>
+        <result property="salary" column="salary"></result>
+        <result property="pId" column="p_Id"></result>
+        <result property="pName" column="p_Name"></result>
+        <!--<association property="provincePo" column="p_Id">
+            <id property="id" column="p_Id"></id>
+            <result column="text" property="p_Name"></result>
+        </association>-->
+
+    </resultMap>
+    <!--用户角色map-->
+    <resultMap id="userIdRoleMap" type="com.po.UserRole">
+        <id property="U_ID" column="uid"></id>
+        <result column="R_id" property="rid"></result>
+    </resultMap>
+
+    <select id="queryUser" resultType="com.po.UserInfo" parameterType="com.po.UserInfo">
+        select
+            u.id,
+            u.username,
+            u.age,
+            u.sex,
+            u.salary,
+            u.province,
+            p.p_Id,
+            p.p_Name
+
+        FROM
+            t_user u
+                left join
+                t_province p
+                on u.province = p.p_id
+        order by id asc
+                 limit
+                 #{start},
+                 #{end}
+    </select>
+    <!--关键字查询-->
+    <select id="queryUserByKeyWord" resultType="com.po.UserInfo" parameterType="com.po.UserInfo">
+        select
+            u.id,
+            u.username,
+            u.age,
+            u.sex,
+            u.salary,
+            u.province,
+            p.p_Id,
+            p.p_Name
+
+        FROM
+            t_user u
+                left join
+                t_province p
+                on u.province = p.p_id
+        where id like '%${keyWord}%'
+           or username like '%${keyWord}%'
+        order by id asc
+    </select>
+
+    <select id="findUserById" resultType="com.po.UserInfo" parameterType="int">
+        select
+            u.id,
+            u.username,
+            u.password,
+            u.age,
+            u.sex,
+            u.salary,
+            u.province,
+            p.p_Id,
+            p.p_Name
+
+        FROM
+            t_user u
+                left join
+                t_province p
+                on u.province = p.p_id
+        where id = #{uid}
+    </select>
+
+
+    <!-- useGeneratedKeys默认值为false，keyProperty的值对应的是User类中的主键名 -->
+    <!--  <insert id="getGeneratedKey2" parameterType="cn.kolbe.mybatis.domain.User" useGeneratedKeys="true" keyProperty="id">
+          insert into users(name, password) values(#{name}, #{password})
+      </insert>-->
+
+    <!-- useGeneratedKeys默认值为false，keyProperty的值对应的是User类中的主键名 -->
+    <insert id="insert" parameterType="com.po.UserInfo" useGeneratedKeys="true" keyProperty="id">
+        insert into t_user(username, password, age, sex, province, salary)
+        values (#{userName}, #{password}, #{age}, #{sex}, #{p_Id}, #{salary})
+    </insert>
+
+    <update id="editUser" parameterType="com.po.UserInfo">
+        update t_user
+        set userName = #{userName},
+            password = #{password},
+            age      = #{age},
+            sex      = #{sex},
+            province = #{p_Id},
+            salary   = #{salary}
+        where id = #{id}
+    </update>
+
+    <delete id="delUser" parameterType="int">
+        delete
+        from t_user
+        where id = #{id}
+    </delete>
+
+    <select id="queryTotal" resultType="int">
+        select count(1)
+        from t_user
+    </select>
+
+    <!--查询用户角色-->
+    <select id="selectUserRoles" resultMap="userRoleMap">
+        /*select t.R_Id,t.R_Name from t_roles t,t_user_role ur, t_user u
+        where u.id = ur.U_id
+          and t.R_Id = ur.R_id*/
+        select R_Id,R_Name
+        from t_roles
+    </select>
+    <!--删除用户的角色-->
+    <delete id="deleteUserRoleByUid" parameterType="int">
+        delete
+        from t_user_role
+        where u_Id = #{userId}
+    </delete>
+
+
+    <!--批量插入用户角色-->
+
+    <insert id="insertUserRole" parameterType="java.util.List">
+
+        insert into t_user_role
+        ( u_id,r_id)
+        values
+        <foreach collection="list" item="item" index="index" separator=",">
+            (
+            #{item.uid},
+            #{item.rid}
+            )
+        </foreach>
+
+    </insert>
+
+    <resultMap id="provinceMap" type="com.po.ProvincePo">
+        <id property="id" column="P_ID"></id>
+        <result column="P_NAME" property="text"></result>
+    </resultMap>
+    <!--获取所有省份-->
+    <select id="getProvince" resultMap="provinceMap">
+        SELECT P_ID,P_NAME
+        FROM T_PROVINCE
+    </select>
+
+    <!--根据用户的id，查询用户 都有哪些角色-->
+    <select id="queryUsersRoleById" resultMap="userIdRoleMap" parameterType="int">
+        select R_id,U_ID
+        from t_user_role
+        where U_id = #{uId}
+    </select>
+
+
+</mapper>

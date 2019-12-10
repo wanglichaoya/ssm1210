@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybaits.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.dao.LoginLogDao">
+
+
+    <!--新增菜单-->
+    <insert id="insert" parameterType="com.po.LoginLog" useGeneratedKeys="true" keyProperty="login_log_id">
+        insert into t_login_log(log_name, user_id, create_time, succeed,ip_address)
+       </insert>
+
+    <insert id="insert2" parameterType="com.po.LoginLog" useGeneratedKeys="true" keyProperty="login_log_id">
+        insert into t_login_log2(log_name, user_id, create_time, succeed,ip_address)
+        values ('登录日志', 1, null, '成功','')
+    </insert>
+
+
+</mapper>
